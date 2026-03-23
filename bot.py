@@ -7,11 +7,11 @@ from textwrap import shorten
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# Pamięć na propozycje tweetów
+# Pamięć na propozycje „tweetów" per użytkownik
 pending_tweets = {}
 
 
-# --- GENERATOR POLITYCZNYCH TWEETÓW ---
+# --- GENERATOR POLITYCZNYCH „TWEETÓW" ---
 
 def fetch_political_news():
     """
@@ -23,11 +23,13 @@ def fetch_political_news():
         "Nowe napięcia na linii USA–Chiny",
         "Dyskusja o reformie sądownictwa w Polsce",
         "UE rozważa nowe sankcje gospodarcze",
-        "Spotkanie przywódców w sprawie energii i obronności"
+        "Spotkanie przywódców w sprawie energii i obronności",
     ]
 
-
 def generate_political_tweet(topic: str) -> str:
+    """
+    Generuje krótki, „tweetopodobny" tekst o polityce.
+    """
     headlines = fetch_political_news()
     body = "; ".join(headlines[:3])
 
@@ -46,15 +48,16 @@ def start(message):
         message,
         "Cześć! Jestem botem politycznym.\n"
         "Użyj:\n"
-        "/stworz polityka – wygeneruję tweeta\n"
-        "/tak – zaakceptujesz\n"
-        "/nie – odrzucisz\n\n"
-        "Nie publikuję niczego na X — tylko generuję propozycje."
+        "/stworz [temat] – wygeneruję propozycję tweeta\n"
+        "/tak – zaakceptujesz ostatnią propozycję\n"
+        "/nie – odrzucisz ostatnią propozycję\n\n"
+        "Nie publikuję niczego na X – tylko generuję teksty do akceptacji."
     )
 
 
 @bot.message_handler(commands=['stworz'])
 def stworz(message):
+    # temat po /stworz
     topic = message.text.replace('/stworz', '', 1).strip()
     if not topic:
         topic = "polityka mieszana"
@@ -72,12 +75,12 @@ def stworz(message):
 def accept(message):
     tweet = pending_tweets.get(message.chat.id)
     if not tweet:
-        bot.reply_to(message, "Nie mam żadnego tweeta do akceptacji.")
+        bot.reply_to(message, "Nie mam żadnej propozycji do akceptacji.")
         return
 
     bot.reply_to(
         message,
-        f"Zatwierdzono! Oto zaakceptowany tweet:\n\n{tweet}"
+        f"Zatwierdzono ✅\n\nOto zaakceptowany tekst:\n\n{tweet}"
     )
     pending_tweets.pop(message.chat.id, None)
 
@@ -86,14 +89,14 @@ def accept(message):
 def reject(message):
     if message.chat.id in pending_tweets:
         pending_tweets.pop(message.chat.id, None)
-        bot.reply_to(message, "OK, odrzuciłem. Użyj /stworz, aby wygenerować nowy.")
+        bot.reply_to(message, "OK, odrzuciłem. Użyj /stworz, aby wygenerować nową propozycję.")
     else:
-        bot.reply_to(message, "Nie mam żadnego tweeta do odrzucenia.")
+        bot.reply_to(message, "Nie mam żadnej propozycji do odrzucenia.")
 
 
 @bot.message_handler(func=lambda m: True)
 def fallback(message):
-    bot.reply_to(message, "Nie znam tej komendy. Użyj /stworz, /tak, /nie.")
+    bot.reply_to(message, "Nie znam tej komendy. Użyj /stworz, /tak, /nie lub /start.")
 
 
 if __name__ == "__main__":
