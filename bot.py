@@ -94,3 +94,4 @@ def handle_save(message):
 if __name__ == "__main__":
     logging.info("Bot AI wystartował...")
     bot.infinity_polling()
+
