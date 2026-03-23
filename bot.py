@@ -37,6 +37,7 @@ def get_latest_news():
     # Pobieramy 5 najnowszych tytułów
     titles = [entry.title for entry in feed.entries[:5]]
     return "\n".join(titles) if titles else "Brak bieżących nagłówków w RSS."
+    
 
 def generate_ai_tweet(topic: str) -> str:
     """POPRAWIONE: Dostęp do atrybutów odpowiedzi OpenAI (v1.0+)."""
@@ -94,4 +95,6 @@ def handle_save(message):
 if __name__ == "__main__":
     logging.info("Bot AI wystartował...")
     bot.infinity_polling()
+    pip install -r requirements.txt
+
 
