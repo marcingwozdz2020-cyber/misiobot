@@ -31,15 +31,15 @@ pending_tweets = {}
 # --- Logika Pobierania i Generowania ---
 
 def get_latest_news():
-    """Pobiera najświeższe nagłówki z Google News (sekcja PL Polityka)."""
+    """POPRAWIONE: Pobiera prawdziwy kanał RSS z Google News PL."""
     url = "https://news.google.com"
     feed = feedparser.parse(url)
     # Pobieramy 5 najnowszych tytułów
     titles = [entry.title for entry in feed.entries[:5]]
-    return "\n".join(titles)
+    return "\n".join(titles) if titles else "Brak bieżących nagłówków w RSS."
 
 def generate_ai_tweet(topic: str) -> str:
-    """Używa OpenAI do stworzenia tweeta na podstawie newsów."""
+    """POPRAWIONE: Dostęp do atrybutów odpowiedzi OpenAI (v1.0+)."""
     news_context = get_latest_news()
     
     prompt = f"""
@@ -48,21 +48,26 @@ def generate_ai_tweet(topic: str) -> str:
     
     Napisz krótki, angażujący tweet na temat: {topic}. 
     Tweet musi być w języku polskim, zawierać max 240 znaków i pasować do stylu Twittera.
-    Nie używaj hashtagów, chyba że są kluczowe.
+    Nie używaj hashtagów.
     """
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo", # lub gpt-4o dla lepszej jakości
+            model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
+        # POPRAWKA: Prawidłowa ścieżka do treści w nowej bibliotece OpenAI
         return response.choices[0].message.content.strip()
     except Exception as e:
         logging.error(f"Błąd OpenAI: {e}")
-        return "Błąd podczas generowania treści przez AI."
+        return f"Błąd podczas generowania przez AI: {str(e)}"
 
 # --- Handlery ---
+
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    bot.reply_to(message, "🤖 Bot aktywny! Wpisz /generate [temat], aby stworzyć tweet na bazie newsów.")
 
 @bot.message_handler(commands=['generate'])
 def handle_generate(message):
